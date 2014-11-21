@@ -22,13 +22,13 @@ void main(){
 		auto posAttr = shader.GetAttribute("position");
 		auto colAttr = shader.GetAttribute("color");
 
-		auto psys = new ParticleSystem(200_000);
+		auto psys = new ParticleSystem(1_000_000);
 		auto str = 1f;
 		psys.AddAttractor(vec3(0, 0, 0), str);
 
 		vec3 prevm;
 
-		glPointSize(1);
+		glPointSize(2);
 
 		double dt = 0f;
 
@@ -36,6 +36,10 @@ void main(){
 		bool running = true;
 		bool emit = false;
 		float attractorPlaceTimer = 0f;
+
+		enum framecap = 100;
+		uint framecount = 0;
+		double frameaccum = 0;
 
 		while(running){
 			SDL_Event e;
@@ -47,6 +51,8 @@ void main(){
 						}else if(e.key.keysym.sym == SDLK_SPACE){
 							psys.ClearAttractors();
 							//psys.AddAttractor(vec3(0, 0, 0), str);
+						}else if(e.key.keysym.sym == SDLK_c){
+							psys.ClearParticles();
 						}
 						break;
 
@@ -81,8 +87,17 @@ void main(){
 			t = pt;
 			attractorPlaceTimer -= dt;
 
-			if(emit) foreach(i; 0..1000){ psys.Emit(prevm, vec3(0, 1, 0) * uniform(5f, 20f) * 0.05f);}
-			psys.Update(1.0/100.0);
+			frameaccum += dt;
+			framecount++;
+			if(framecount >= framecap){
+				writeln("FPS: " ~ to!string(cast(double)framecount / frameaccum));
+				stdout.flush();
+				frameaccum = 0;
+				framecount = 0;
+			}
+
+			if(emit) foreach(i; 0..200){ psys.Emit(prevm, vec3(0, 1, 0) * uniform(5.0, 20.0) * 0.04);}
+			psys.Update(1.0/120.0);
 
 			shader.Use();
 			shader.SetUniform("time", t);

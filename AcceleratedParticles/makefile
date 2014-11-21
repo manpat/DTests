@@ -7,4 +7,4 @@ $(OUTPUTNAME).build: *.d #*/*.d
 	$(COMPILER) $^ $(DIRS) $(LIBS) -of$(OUTPUTNAME).build
 
 run: $(OUTPUTNAME).build
-	@primusrun ./$(OUTPUTNAME).build
+	@vblank_mode=0 primusrun ./$(OUTPUTNAME).build

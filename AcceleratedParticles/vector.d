@@ -128,6 +128,6 @@ public:
 	}
 }
 
-alias vec2 = vec!(double, 2);
-alias vec3 = vec!(double, 3);
-alias vec4 = vec!(double, 4);
+alias vec2 = vec!(float, 2);
+alias vec3 = vec!(float, 3);
+alias vec4 = vec!(float, 4);

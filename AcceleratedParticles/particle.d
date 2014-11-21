@@ -11,7 +11,7 @@ class ParticleSystem{
 	VertexArray!Particle particlePosVBO;
 	VertexArray!Attractor attractorPosVBO;
 	uint numParticles;
-	uint begin;
+	uint begin, savedbegin;
 	bool dirty;
 
 	Particle[] particles;
@@ -26,7 +26,6 @@ class ParticleSystem{
 		computeShader = new Shader("shaders/compute.glsl", "compute");
 
 		particlePosVBO = new VertexArray!Particle(GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-		particlePosVBO.Load([]);
 
 		attractorPosVBO = new VertexArray!Attractor(GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
 		attractorPosVBO.Load([]);
@@ -43,9 +42,9 @@ class ParticleSystem{
 			p.vel = vec4(0, 0, 0, 0);
 			//p.col = vec4(0, 1, 0, 1);
 		}
-		begin = 0;
+		particlePosVBO.Load(particles);
+		begin = savedbegin = 0;
 		dirty = true;
-		//Upload();
 	}
 
 	void Draw(){
@@ -77,30 +76,34 @@ class ParticleSystem{
 
 	void Update(double dt){
 		if(dirty) {
-			particlePosVBO.Load(particles);
 			dirty = false;
+			particlePosVBO.Bind();
+
+			if(begin > savedbegin){
+				glBufferSubData(GL_ARRAY_BUFFER, savedbegin * Particle.sizeof, begin - savedbegin, &particles[savedbegin]);
+			}else{
+				glBufferSubData(GL_ARRAY_BUFFER, savedbegin * Particle.sizeof, numParticles - savedbegin, &particles[savedbegin%numParticles]);
+				glBufferSubData(GL_ARRAY_BUFFER, begin * Particle.sizeof, begin, &particles[0]);
+			}
+
+			particlePosVBO.Unbind();
+
+			savedbegin = begin;
 		}
 
 		computeShader.Use();
-		computeShader.SetUniform("dt", dt);
+		computeShader.SetUniform("dt", cast(float) dt);
 
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, particlePosVBO.raw);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, attractorPosVBO.raw);
 
-		glDispatchCompute(particlePosVBO.length/10000, 1000, 10);
+		glDispatchCompute(particlePosVBO.length/10000, 100, 100);
 
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
-
-		glBindBuffer(GL_ARRAY_BUFFER, particlePosVBO.raw);
-		particles = (cast(Particle*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY))[0..particlePosVBO.length];
-		glUnmapBuffer(GL_ARRAY_BUFFER);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
 	}
 
-	void Upload(){
-	}
-
-	void AddAttractor(vec3 _pos, double str = 1f){
+	void AddAttractor(vec3 _pos, float str = 1f){
 		vec4 pos;
 		pos.values[0..3] = _pos.values;
 		pos.w = 0f;
@@ -112,6 +115,14 @@ class ParticleSystem{
 		attractors = [];
 		attractorPosVBO.Load(attractors);
 	}
+
+	void ClearParticles(){
+		foreach(ref p; particles){
+			p.vel = vec4(0,0,0,0);
+		}
+
+		particlePosVBO.Load(particles);
+	}
 }
 
 struct Particle{
@@ -122,6 +133,6 @@ struct Particle{
 
 struct Attractor{
 	vec4 pos;
-	double strength = 1f;
-	double[3] _;
+	float strength = 1f;
+	float[3] _;
 }

@@ -3,17 +3,17 @@
 
 layout (local_size_x = 1, local_size_y = 1) in;
 
-uniform double dt;
+uniform float dt;
 
 struct Particle{
-	dvec4 pos;
-	dvec4 vel;
-	dvec4 col;
+	vec4 pos;
+	vec4 vel;
+	vec4 col;
 };
 
 struct Attractor{
-	dvec4 pos;
-	double strength;
+	vec4 pos;
+	float strength;
 };
 
 layout (std430, binding = 0) buffer pbuf{
@@ -40,11 +40,11 @@ void main(){
 		acc += dir * force * attractors[i].strength;
 	}
 
-	particles[idx].vel += acc * dt;
-	dvec4 vel = particles[idx].vel;
+	particles[idx].vel += vec4(acc) * dt;
+	vec4 vel = particles[idx].vel;
 	particles[idx].pos += vel * dt;
 	particles[idx].pos.w = 0f;
-	particles[idx].col = dvec4(vel.x, vel.y, 1f-vel.x, 1f);
+	particles[idx].col = vec4(vel.x, vel.y, 1f-vel.x, 1f);
 
 	if(length(particles[idx].pos) > 3f) particles[idx].vel.w = 0f;
 }
