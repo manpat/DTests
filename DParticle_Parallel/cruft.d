@@ -15,8 +15,12 @@ private SDL_GLContext glctx = null;
 private GLuint vao = 0;
 
 void InitCruft(){
-	Derelict_SetMissingSymbolCallback(&handleDerelictsProblems);
-	DerelictSDL2.load();
+	//Derelict_SetMissingSymbolCallback(&handleDerelictsProblems);
+	//try{
+		DerelictSDL2.load();
+	//}catch(){
+		
+	//}
 	DerelictGL3.load();
 
 	scope(failure) SDL_Quit();

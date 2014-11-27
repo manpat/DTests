@@ -22,13 +22,13 @@ void main(){
 		auto posAttr = shader.GetAttribute("position");
 		auto colAttr = shader.GetAttribute("color");
 
-		auto psys = new ParticleSystem(1_000_000);
+		auto psys = new ParticleSystem(250_000);
 		auto str = 1f;
 		psys.AddAttractor(vec3(0, 0, 0), str);
 
 		vec3 prevm;
 
-		glPointSize(2);
+		glPointSize(1);
 
 		double dt = 0f;
 
@@ -96,7 +96,7 @@ void main(){
 				framecount = 0;
 			}
 
-			if(emit) foreach(i; 0..200){ psys.Emit(prevm, vec3(0, 1, 0) * uniform(5.0, 20.0) * 0.04);}
+			if(emit) foreach(i; 0..200){ psys.Emit(prevm, vec3(uniform(-10f, 10f), uniform(4f, 20f), 0) * 0.04f);}
 			psys.Update(1.0/120.0);
 
 			shader.Use();

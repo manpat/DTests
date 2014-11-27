@@ -80,7 +80,7 @@ public:
 		char[] f = readText!(char[])(name);
 		ulong numSegments = count(f, shaderTypeString);
 
-		auto shaders = new uint[numSegments];
+		auto shaders = new uint[cast(uint)numSegments];
 
 		idx_t findEndOfLine(idx_t startpos){
 			auto end = f.indexOf("\n", startpos);
@@ -125,7 +125,7 @@ public:
 			idx_t nextIdx = findNextSegmentOrEnd(idx);
 			char[] src = f[idx..nextIdx];
 
-			shaders[i] = LoadShaderFromString(src, type);
+			shaders[cast(uint)i] = LoadShaderFromString(src, type);
 
 			idx = nextIdx;
 		}

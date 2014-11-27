@@ -25,7 +25,9 @@ layout (std430, binding = 1) buffer abuf{
 
 void main(){
 	uvec3 gidx = gl_WorkGroupID;
-	uint idx = gidx.z * gl_NumWorkGroups.y * gl_NumWorkGroups.x + gidx.y * gl_NumWorkGroups.x + gidx.x;
+	uint idx = 	gidx.z * gl_NumWorkGroups.y * gl_NumWorkGroups.x + 
+				gidx.y * gl_NumWorkGroups.x + 
+				gidx.x;
 
 	if(particles[idx].vel.w == 0f) return;
 

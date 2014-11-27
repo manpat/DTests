@@ -26,15 +26,11 @@ class ParticleSystem{
 		computeShader = new Shader("shaders/compute.glsl", "compute");
 
 		particlePosVBO = new VertexArray!Particle(GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-
 		attractorPosVBO = new VertexArray!Attractor(GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW);
-		attractorPosVBO.Load([]);
 
 		auto shader = GetShader("draw");
 		posAttr = shader.GetAttribute("position");
 		colAttr = shader.GetAttribute("color");
-
-		auto gen = Random(unpredictableSeed()); 
 
 		particles = new Particle[numParticles];
 		foreach(ref p; particles){
@@ -43,6 +39,8 @@ class ParticleSystem{
 			//p.col = vec4(0, 1, 0, 1);
 		}
 		particlePosVBO.Load(particles);
+		attractorPosVBO.Load([]);
+
 		begin = savedbegin = 0;
 		dirty = true;
 	}
@@ -51,7 +49,7 @@ class ParticleSystem{
 		particlePosVBO.Bind!(vec4, "pos")(posAttr);
 		particlePosVBO.Bind!(vec4, "col")(colAttr);
 
-		glDrawArrays(GL_POINTS, 0, particlePosVBO.length);
+		glDrawArrays(GL_POINTS, 0, numParticles);
 
 		particlePosVBO.Unbind();
 	}
@@ -80,10 +78,10 @@ class ParticleSystem{
 			particlePosVBO.Bind();
 
 			if(begin > savedbegin){
-				glBufferSubData(GL_ARRAY_BUFFER, savedbegin * Particle.sizeof, begin - savedbegin, &particles[savedbegin]);
+				glBufferSubData(GL_ARRAY_BUFFER, savedbegin * Particle.sizeof, (begin - savedbegin) * Particle.sizeof, &particles[savedbegin]);
 			}else{
-				glBufferSubData(GL_ARRAY_BUFFER, savedbegin * Particle.sizeof, numParticles - savedbegin, &particles[savedbegin%numParticles]);
-				glBufferSubData(GL_ARRAY_BUFFER, begin * Particle.sizeof, begin, &particles[0]);
+				glBufferSubData(GL_ARRAY_BUFFER, savedbegin * Particle.sizeof, (numParticles - savedbegin) * Particle.sizeof, &particles[savedbegin%numParticles]);
+				glBufferSubData(GL_ARRAY_BUFFER, 0, begin * Particle.sizeof, particles.ptr);
 			}
 
 			particlePosVBO.Unbind();
