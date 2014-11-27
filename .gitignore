@@ -1,3 +1,5 @@
 *.o
+*.obj
 *.html
-*.build
+*.build*
+*.exe*
