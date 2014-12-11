@@ -2,9 +2,7 @@ module shader;
 
 import std.stdio;
 import std.file;
-import derelict.opengl3.gl3;
-
-import vector;
+import gl;
 
 private Shader activeShader;
 private Shader[string] loadedShaders;
@@ -93,8 +91,14 @@ public:
 				case "vertex":
 					return GL_VERTEX_SHADER;
 
+				case "tesscontrol":
+					return GL_TESS_CONTROL_SHADER;
+
 				case "geometry":
 					return GL_GEOMETRY_SHADER;
+
+				case "tesseval":
+					return GL_TESS_EVALUATION_SHADER;
 
 				case "fragment":
 					return GL_FRAGMENT_SHADER;
@@ -168,20 +172,16 @@ public:
 	}
 
 	void SetUniform(T)(string name, T dat){
-		static if(is(T == float)){
-			glUniform1f(GetUniformLoc(name), dat);
-		} else static if(is(T == double)){
-			glUniform1d(GetUniformLoc(name), dat);
-		}else{
-			assert(false, "SetUniform not supported for type " ~ T.stringof);
-		}
-
-		// Obviously not complete
+		SetUniform(GetUniformLoc(name), dat);
 	}
+
 	void SetUniform(T)(uint name, T dat){
-		static if(is(T == float)){
+		static if(is(T : Matrix!(DT, D, D), DT, uint D)){
+			mixin("glUniformMatrix"~to!string(D)~"fv")(name, 1, GL_TRUE, dat.value_ptr);
+
+		}else static if(is(T == float)){
 			glUniform1f(name, dat);
-		} else static if(is(T == double)){
+		}else static if(is(T == double)){
 			glUniform1d(name, dat);
 		}else{
 			assert(false, "SetUniform not supported for type " ~ T.stringof);

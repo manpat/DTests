@@ -9,6 +9,8 @@ in vec4 color;
 out vec4 vcol;
 
 void main(){
+	// float a = time * pi() / 2f;
+
 	gl_Position = vec4(position.xyz, 1f);
 	vcol = vec4(color.xyz, 1f);
 }

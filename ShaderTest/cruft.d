@@ -5,17 +5,17 @@ import derelict.util.exception;
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
 
-//private bool handleDerelictsProblems(string libName, string symbolName) {
-//	writeln("Failed to load ", symbolName, ", ignoring this.");
-//	return true;
-//}
+private ShouldThrow handleDerelictsProblems(string symbolName) {
+	writeln("Failed to load ", symbolName, ", ignoring this.");
+	return ShouldThrow.No;
+}
 
 private SDL_Window* win = null;
 private SDL_GLContext glctx = null;
 private GLuint vao = 0;
 
 void InitCruft(){
-	//Derelict_SetMissingSymbolCallback(&handleDerelictsProblems);
+	DerelictSDL2.missingSymbolCallback = &handleDerelictsProblems;
 	DerelictSDL2.load();
 	DerelictGL3.load();
 

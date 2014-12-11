@@ -20,24 +20,14 @@ Shader GetShader(string name){
 class Shader{
 private: 
 	GLuint _program = 0;
+	string _path;
 
 public:
 	this(string fname, string name = ""){
 		scope(failure) writeln("Shader init failed");
+		_path = fname;
 
-		GLuint[] sh = LoadShadersFromFile(fname);
-
-		_program = glCreateProgram();
-		foreach(s; sh){
-			glAttachShader(_program, s);
-		}
-
-		glBindFragDataLocation(_program, 0, "color");
-
-		glLinkProgram(_program);
-		foreach(s; sh){
-			glDeleteShader(s);
-		}
+		Load();
 
 		if(!activeShader){
 			glUseProgram(_program);
@@ -53,6 +43,22 @@ public:
 			activeShader = null;
 		}
 		glDeleteProgram(_program);
+	}
+
+	private void Load(){
+		GLuint[] sh = LoadShadersFromFile(_path);
+
+		_program = glCreateProgram();
+		foreach(s; sh){
+			glAttachShader(_program, s);
+		}
+
+		glBindFragDataLocation(_program, 0, "color");
+
+		glLinkProgram(_program);
+		foreach(s; sh){
+			glDeleteShader(s);
+		}
 	}
 
 	private GLuint LoadShaderFromFile(string name, GLuint type){
@@ -160,6 +166,11 @@ public:
 
 	Attribute GetAttribute(string attr){
 		return new Attribute(GetAttributeLoc(attr));
+	}
+
+	void Reload(){
+		glDeleteProgram(_program);
+		Load();
 	}
 
 	void Use(){
