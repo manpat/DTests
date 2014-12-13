@@ -168,21 +168,15 @@ public:
 	}
 
 	void SetUniform(T)(string name, T dat){
-		static if(is(T == float)){
-			glUniform1f(GetUniformLoc(name), dat);
-		} else static if(is(T == double)){
-			glUniform1d(GetUniformLoc(name), dat);
-		}else{
-			assert(false, "SetUniform not supported for type " ~ T.stringof);
-		}
-
-		// Obviously not complete
+		SetUniform(GetUniformLoc(name), dat);
 	}
 	void SetUniform(T)(uint name, T dat){
 		static if(is(T == float)){
 			glUniform1f(name, dat);
 		} else static if(is(T == double)){
 			glUniform1d(name, dat);
+		} else static if(is(T == bool)){
+			glUniform1ui(name, dat?1:0);
 		}else{
 			assert(false, "SetUniform not supported for type " ~ T.stringof);
 		}

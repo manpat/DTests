@@ -49,9 +49,19 @@ class ParticleSystem{
 		particlePosVBO.Bind!(vec4, "pos")(posAttr);
 		particlePosVBO.Bind!(vec4, "col")(colAttr);
 
+		glPointSize(1);
 		glDrawArrays(GL_POINTS, 0, numParticles);
 
 		particlePosVBO.Unbind();
+	}
+
+	void DrawAttractors(){
+		attractorPosVBO.Bind!(vec4, "pos")(posAttr);
+
+		glPointSize(5);
+		glDrawArrays(GL_POINTS, 0, attractorPosVBO.length);
+
+		attractorPosVBO.Unbind();
 	}
 
 	private Particle* FindFreeParticle(){

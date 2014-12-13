@@ -1,6 +1,6 @@
 OUTPUTNAME=dparticle
 COMPILER=dmd
-DIRS=-L-L/home/patrick/Development/libraries/D/derelict3/lib/dmd
+DIRS=-L-L/home/patrick/Development/libraries/D/derelictorg/lib/
 LIBS=-L-lDerelictSDL2 -L-lDerelictUtil -L-lDerelictGL3 -L-ldl
 
 $(OUTPUTNAME).build: *.d #*/*.d

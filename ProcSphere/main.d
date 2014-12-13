@@ -7,6 +7,7 @@ import derelict.sdl2.sdl;
 import cruft;
 import shader;
 
+import model;
 import vertexarray;
 import camera;
 import gl;
@@ -19,59 +20,16 @@ void main(){
 		auto shader = new Shader("shaders/vanilla.glsl", "draw");
 		auto posAttr = shader.GetAttribute("position");
 
-		float v = (1.0 + sqrt(5.0)) / 2.0;
-		auto verts = new VertexArray!vec3();
-		verts.Load([
-			vec3(-1,  v,  0), // 0
-			vec3( 1,  v,  0),
-			vec3(-1, -v,  0),
-			vec3( 1, -v,  0),
+		auto camera = new Camera;
+		camera.SetPosition(vec3(0, 0, -11));
 
-			vec3( 0, -1,  v), // 4
-			vec3( 0,  1,  v),
-			vec3( 0, -1, -v),
-			vec3( 0,  1, -v),
+		auto base = new Icosahedron(0, 1);
+		auto shape = new Icosahedron(1, 2);
+		auto shape2 = new Icosahedron(1, 3);
 
-			vec3( v,  0, -1), // 8
-			vec3( v,  0,  1),
-			vec3(-v,  0, -1),
-			vec3(-v,  0,  1),
-		]);
-
-		auto indices = new VertexArray!uint(GL_ELEMENT_ARRAY_BUFFER);
-		indices.Load([
-			0, 11, 5,
-			0, 5, 1,
-			0, 1, 7,
-			0, 7, 10,
-			0, 10, 11,
-
-			1, 5, 9,
-			5, 11, 4,
-			11, 10, 2,
-			10, 7, 6,
-			7, 1, 8,
-
-			3, 9, 4,
-			3, 4, 2,
-			3, 2, 6,
-			3, 6, 8,
-			3, 8, 9,
-
-			4, 9, 5,
-			2, 4, 11,
-			6, 2, 10,
-			8, 6, 7,
-			9, 8, 1,
-		]);
-
-		//mat4 projectionMatrix = projection(60f, 8f/6f, 0.1, 1000);
 		float aspect = 8f/6f;
-		mat4 projectionMatrix = orthographic(-1f, 1f, 1f, -1f, 0.1, 1000);
+		mat4 projectionMatrix = projection(60f, aspect, 0.1, 1000);
 		shader.SetUniform("projectionMatrix", projectionMatrix);
-
-		mat4 cameraMatrix = mat4.identity();
-		shader.SetUniform("modelViewMatrix", cameraMatrix);
 
 		double dt = 0f;
 
@@ -85,7 +43,14 @@ void main(){
 		vec3 prevm;
 		bool doRotateCamera = false;
 
-		auto camera = new Camera;
+		glPointSize(3);
+
+		int tessLevel = 1;
+		shader.SetUniform("tessLevel", tessLevel);
+
+		float speed = 1f;
+
+		bool[int] keys;
 
 		while(running){
 			SDL_Event e;
@@ -94,11 +59,18 @@ void main(){
 					case SDL_KEYDOWN:
 						if(e.key.keysym.sym == SDLK_ESCAPE){
 							running = false;
-						}else if(e.key.keysym.sym == SDLK_w){
-							camera.Translate(vec3(0, 0, 5)*dt);
-						}else if(e.key.keysym.sym == SDLK_s){
-							camera.Translate(vec3(0, 0,-5)*dt);
+						}else if(e.key.keysym.sym == SDLK_r){
+							tessLevel += 1;
+							shader.SetUniform("tessLevel", tessLevel);
+						}else if(e.key.keysym.sym == SDLK_f){
+							tessLevel = max(1, tessLevel-1);
+							shader.SetUniform("tessLevel", tessLevel);
 						}
+						keys[e.key.keysym.sym] = true;
+						break;
+
+					case SDL_KEYUP:
+						keys[e.key.keysym.sym] = false;
 						break;
 
 					case SDL_MOUSEBUTTONDOWN:
@@ -140,9 +112,25 @@ void main(){
 				stdout.flush();
 				frameaccum = 0;
 				framecount = 0;
+
+				writeln(camera.eyepos);
 			}
 
-			shader.SetUniform("modelViewMatrix", camera.matrix);
+			float nspeed = keys.get(SDLK_LSHIFT, false)? speed*5f : speed;
+
+			if(keys.get(SDLK_w, false)){
+				camera.Translate(vec3(0, 0, nspeed)*dt);
+			}else if(keys.get(SDLK_s, false)){
+				camera.Translate(vec3(0, 0,-nspeed)*dt);
+			}
+
+			if(keys.get(SDLK_a, false)){
+				camera.Translate(vec3(-nspeed, 0, 0)*dt);
+			}else if(keys.get(SDLK_d, false)){
+				camera.Translate(vec3(nspeed, 0, 0)*dt);
+			}
+
+			camera.Update();
 
 			shader.Use();
 			shader.SetUniform!float("time", t);
@@ -152,14 +140,16 @@ void main(){
 
 			posAttr.Enable();
 
-			verts.Bind(posAttr);
-			indices.Bind();
+			MatrixStack.Push();
+				MatrixStack.top = MatrixStack.top *
+					mat4.rotation(PI/2f, 0f, 0f, 1f) * 
+					mat4.translation(10, 0, 0);
 
-			glPatchParameteri(GL_PATCH_VERTICES, 3);
-			glDrawElements(GL_PATCHES, indices.length, GL_UNSIGNED_INT, null);
+				shape2.Render(posAttr);
+				shape.Render(posAttr);
+				base.Render(posAttr);
 
-			verts.Unbind();
-			indices.Unbind();
+			MatrixStack.Pop();
 
 			posAttr.Disable();
 
@@ -176,12 +166,19 @@ mat4 projection(float fov, float a, float n, float f){
 	float D2R = PI/180f;
 	float ys = 1f / tan(D2R * fov / 2);
 	float xs = ys / a;
-	float fn = 1f/(n-f);
+	float fn = 1f / (f-n);
 
-	return mat4(xs, 0, 0, 0,
-				0, ys, 0, 0,
-				0, 0, (f+n)*fn, 2*f*n*fn,
+	return mat4(-xs, 0, 0, 0,
+				0,-ys, 0, 0,
+				0, 0, -(f+n)*fn,-2*f*n*fn,
 				0, 0, -1, 0);
+/*
+	return mat4(
+		n, 0, 0, 0,
+		0, n, 0, 0,
+		0, 0, -(f+n)*fn, -2*f*n*fn,
+		0, 0, -1, 0
+		);*/
 }
 
 mat4 orthographic(float l, float r, float t, float b, float n, float f){
@@ -189,11 +186,18 @@ mat4 orthographic(float l, float r, float t, float b, float n, float f){
 	float ttb = t - b;
 	float ftn = f - n;
 
+	//return mat4(
+	//	2f/rtl, 0, 0, -(r+l)/rtl,
+	//	0, 2f/ttb, 0, -(t+b)/ttb,
+	//	0, 0, -2f/ftn, (f+n)/ftn,
+	//	0, 0, 0, 1
+	//	);
+
 	return mat4(
-		2/rtl, 0, 0, -(r+l)/rtl,
-		0, 2/ttb, 0, -(t+b)/ttb,
-		0, 0, -2/ftn, (f+n)/ftn,
-		0, 0, 0, 1
+		-1/3f, 0, 0, 0,
+		0, 1/3f, 0, 0,
+		0, 0, 0, 0,
+		0, 0, -1, 1
 		);
 }
 

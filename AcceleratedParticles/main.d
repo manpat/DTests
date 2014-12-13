@@ -28,8 +28,6 @@ void main(){
 
 		vec3 prevm;
 
-		glPointSize(1);
-
 		double dt = 0f;
 
 		double t = 0f;
@@ -96,7 +94,7 @@ void main(){
 				framecount = 0;
 			}
 
-			if(emit) foreach(i; 0..200){ psys.Emit(prevm, vec3(uniform(-10f, 10f), uniform(4f, 20f), 0) * 0.04f);}
+			if(emit) foreach(i; 0..200){ psys.Emit(prevm, vec3(uniform(-10f, 10f)*0f, uniform(4f, 20f), 0) * 0.04f);}
 			psys.Update(1.0/120.0);
 
 			shader.Use();
@@ -107,7 +105,11 @@ void main(){
 
 			posAttr.Enable();
 			colAttr.Enable();
+			shader.SetUniform("drawcols", true);
 			psys.Draw();
+			
+			shader.SetUniform("drawcols", false);
+			psys.DrawAttractors();
 			colAttr.Disable();
 			posAttr.Disable();
 

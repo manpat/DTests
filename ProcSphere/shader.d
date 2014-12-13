@@ -179,10 +179,15 @@ public:
 		static if(is(T : Matrix!(DT, D, D), DT, uint D)){
 			mixin("glUniformMatrix"~to!string(D)~"fv")(name, 1, GL_TRUE, dat.value_ptr);
 
+		}else static if(is(T : Vector!(DT, D), DT, uint D)){
+			mixin("glUniform"~to!string(D)~"fv")(name, 1, dat.value_ptr);
+
 		}else static if(is(T == float)){
 			glUniform1f(name, dat);
 		}else static if(is(T == double)){
 			glUniform1d(name, dat);
+		}else static if(is(T == int)){
+			glUniform1i(name, dat);
 		}else{
 			assert(false, "SetUniform not supported for type " ~ T.stringof);
 		}

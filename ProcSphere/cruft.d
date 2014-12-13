@@ -29,7 +29,7 @@ void InitCruft(){
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-	win = SDL_CreateWindow("Particles", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 
+	win = SDL_CreateWindow("ProcSphere", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, 
 		SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS*0);
 
 	scope(failure) SDL_DestroyWindow(win); 
@@ -49,6 +49,7 @@ void InitCruft(){
 	assert(CheckGLError());
 
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void DeinitCruft(){
