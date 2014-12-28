@@ -1,0 +1,23 @@
+Program -> Op1 $
+
+Op1 -> Op2 Op1r
+Op1r -> + Op2 Op1r
+Op1r -> - Op2 Op1r
+Op1r -> ə
+
+Op2 -> Final Op2r
+Op2r -> * Final Op2r
+Op2r -> / Final Op2r
+Op2r -> ə
+
+Final -> number
+Final -> (Op1)
+
+FIRST():
+	Program -> {number}
+	Final -> {number, LeftParen}
+	Op1 -> {number}
+	Op1r -> {+, -, ə}
+	Op2 -> {number}
+	Op2r -> {*, /, ə}
+

@@ -21,11 +21,9 @@ void main(){
 		auto posAttr = shader.GetAttribute("position");
 
 		auto camera = new Camera;
-		camera.SetPosition(vec3(0, 0, -11));
+		camera.SetPosition(vec3(0, 0, -81));
 
-		auto base = new Icosahedron(0, 1);
-		auto shape = new Icosahedron(1, 2);
-		auto shape2 = new Icosahedron(1, 3);
+		auto base = new Icosahedron(1, 80);
 
 		float aspect = 8f/6f;
 		mat4 projectionMatrix = projection(60f, aspect, 0.1, 1000);
@@ -44,6 +42,7 @@ void main(){
 		bool doRotateCamera = false;
 
 		glPointSize(3);
+		//glLineWidth(3);
 
 		int tessLevel = 1;
 		shader.SetUniform("tessLevel", tessLevel);
@@ -51,6 +50,10 @@ void main(){
 		float speed = 1f;
 
 		bool[int] keys;
+
+		GLuint sampleQuery;
+		GLint numsamples;
+		glGenQueries(1, &sampleQuery);
 
 		while(running){
 			SDL_Event e;
@@ -64,6 +67,11 @@ void main(){
 							shader.SetUniform("tessLevel", tessLevel);
 						}else if(e.key.keysym.sym == SDLK_f){
 							tessLevel = max(1, tessLevel-1);
+							shader.SetUniform("tessLevel", tessLevel);
+						}else if(e.key.keysym.sym == SDLK_RETURN){
+							shader.Load();
+							posAttr = shader.GetAttribute("position");
+							shader.SetUniform("projectionMatrix", projectionMatrix);
 							shader.SetUniform("tessLevel", tessLevel);
 						}
 						keys[e.key.keysym.sym] = true;
@@ -108,7 +116,9 @@ void main(){
 			frameaccum += dt;
 			framecount++;
 			if(framecount >= framecap){
-				writeln("FPS: " ~ to!string(cast(double)framecount / frameaccum));
+				double fps = cast(double)framecount / frameaccum;
+				writeln("FPS: " ~ to!string(fps));
+				writeln("samples: " ~ to!string(numsamples) ~ "  (" ~ to!string(fps/cast(double)numsamples) ~ ")");
 				stdout.flush();
 				frameaccum = 0;
 				framecount = 0;
@@ -138,20 +148,22 @@ void main(){
 			glClearColor(0f, 0f, 0f, 1f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+			glBeginQuery(GL_SAMPLES_PASSED, sampleQuery);
+
 			posAttr.Enable();
 
 			MatrixStack.Push();
 				MatrixStack.top = MatrixStack.top *
-					mat4.rotation(PI/2f, 0f, 0f, 1f) * 
-					mat4.translation(10, 0, 0);
+					mat4.rotation(PI/(365.0*24.0/100.0) * t, 0f, 1f, 0f);
 
-				shape2.Render(posAttr);
-				shape.Render(posAttr);
 				base.Render(posAttr);
 
 			MatrixStack.Pop();
 
 			posAttr.Disable();
+
+			glEndQuery(GL_SAMPLES_PASSED);
+			glGetQueryObjectiv(sampleQuery, GL_QUERY_RESULT, &numsamples);
 
 			Swap();
 

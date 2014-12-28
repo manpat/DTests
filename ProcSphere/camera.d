@@ -37,7 +37,7 @@ public:
 	void Update(){
 		auto s = GetActiveShader();
 		s.SetUniform("viewMatrix", matrix());
-		s.SetUniform("eyepos", position);
+		s.SetUniform("eyepos", -position);
 	}
 
 	@property auto matrix(){

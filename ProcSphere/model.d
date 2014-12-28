@@ -100,6 +100,10 @@ class Icosahedron {
 			tv = verts;
 		}
 
+		foreach(ref v; verts){
+			v = v.normalized;
+		}
+
 		vertices.Load(verts);
 	}
 

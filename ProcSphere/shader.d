@@ -18,12 +18,57 @@ Shader GetShader(string name){
 class Shader{
 private: 
 	GLuint _program = 0;
+	string fname;
 
 public:
 	this(string fname, string name = ""){
 		scope(failure) writeln("Shader init failed");
 
+		//GLuint[] sh = LoadShadersFromFile(fname);
+
+		//_program = glCreateProgram();
+		//foreach(s; sh){
+		//	glAttachShader(_program, s);
+		//}
+
+		//glBindFragDataLocation(_program, 0, "color");
+
+		//glLinkProgram(_program);
+		//foreach(s; sh){
+		//	glDeleteShader(s);
+		//}
+
+		//if(!activeShader){
+		//	glUseProgram(_program);
+		//	activeShader = this;
+		//}
+
+		this.fname = fname;
+
+		Load();
+
+		loadedShaders[name] = this;
+	}
+
+	~this(){
+		if(activeShader == this) {
+			glUseProgram(0);
+			activeShader = null;
+		}
+		glDeleteProgram(_program);
+	}
+
+	void Load(){
+		scope(failure) writeln("Shader load failed");
+
 		GLuint[] sh = LoadShadersFromFile(fname);
+
+		if(_program){
+			if(activeShader == this)
+				glUseProgram(0);
+
+			glDeleteProgram(_program);
+		}
 
 		_program = glCreateProgram();
 		foreach(s; sh){
@@ -37,20 +82,12 @@ public:
 			glDeleteShader(s);
 		}
 
-		if(!activeShader){
+		if(!activeShader || activeShader == this){
 			glUseProgram(_program);
 			activeShader = this;
 		}
 
-		loadedShaders[name] = this;
-	}
-
-	~this(){
-		if(activeShader == this) {
-			glUseProgram(0);
-			activeShader = null;
-		}
-		glDeleteProgram(_program);
+		this.fname = fname;
 	}
 
 	private GLuint LoadShaderFromFile(string name, GLuint type){
