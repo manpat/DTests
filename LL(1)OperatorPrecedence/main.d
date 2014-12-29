@@ -3,9 +3,9 @@ module main;
 import std.conv;
 import std.stdio;
 import std.container;
-import stack;
 
 enum NodeType {
+	Unary,
 	Op2,
 	Op1,
 	Number,
@@ -64,7 +64,14 @@ struct Node {
 		if(type == NodeType.Number) {
 			return to!string(number);
 		}else if(type == NodeType.Op2 || type == NodeType.Op1){
-			s ~= "" ~ op;
+			s ~= op;
+		}else if(type == NodeType.Unary){
+			s ~= op;
+
+			if(left) s ~= " " ~ left.toString;
+			else s ~= " ə";
+
+			return s ~ ")";
 		}else if(type == NodeType.End){
 			s ~= "End)";
 			return s;
@@ -100,6 +107,7 @@ void main(){
 		nodeArray.insertBack(Node.Operation('*'));
 		nodeArray.insertBack(Node.LeftParen());
 		nodeArray.insertBack(Node.Number(3));
+		nodeArray.insertBack(Node.Operation('-'));
 		nodeArray.insertBack(Node.Operation('-'));
 		nodeArray.insertBack(Node.Number(4));
 		nodeArray.insertBack(Node.RightParen());
@@ -274,6 +282,12 @@ Node* ParseFinal(){
 
 	if(next.type == NodeType.Number){
 		return Match(NodeType.Number);
+	}else if(next.type == NodeType.Op1){
+		auto node = Match(NodeType.Op1);
+		node.type = NodeType.Unary;
+		node.left = ParseFinal();
+
+		return node;
 	}
 
 	Match(NodeType.LeftParen);

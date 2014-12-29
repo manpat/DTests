@@ -12,6 +12,8 @@ Op2r -> ə
 
 Final -> number
 Final -> (Op1)
+Final -> +Final
+Final -> -Final
 
 FIRST():
 	Program -> {number}
