@@ -4,7 +4,7 @@ import gl;
 import shader;
 
 class Camera {
-static public Camera main;
+static public Camera main = null;
 
 private:
 	quat rotation;
@@ -32,6 +32,10 @@ public:
 
 	void SetPosition(vec3 _p){
 		position = _p;
+	}
+
+	void SetRotation(ref quat _r){
+		rotation = _r;
 	}
 
 	void Update(){
