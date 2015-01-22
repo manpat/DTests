@@ -4,8 +4,9 @@ import deimos.portaudio;
 import std.conv, std.stdio, std.math;
 
 enum SAMPLERATE = 44100;
-enum FRAMELENGTH = 2.0/SAMPLERATE;
+enum FRAMELENGTH = 1.0/SAMPLERATE;
 enum NUMSECONDS = 4;
+enum π2 = 2.0*PI; 
 
 struct Data{
 	double t = 0;
@@ -19,21 +20,24 @@ extern(C) int sawtooth(const(void)* inputBuffer, void* outputBuffer,
 							 const(PaStreamCallbackTimeInfo)* timeInfo,
 							 PaStreamCallbackFlags statusFlags,
 							 void *userData){
-	auto phase = cast(Data*)userData;
+	auto φ = cast(Data*)userData;
 	auto pout = cast(float*)outputBuffer;
 
 	enum vol = 0.2f;
-	enum spread = 3f;
+
+	static float λ(double φ){
+		return sin(φ) + sin(φ*2f) / 2f + sin(φ/3f) / 3f + sin(φ/2f) / 2f;
+	}
 
 	foreach(i; 0 .. framesPerBuffer) {
-		auto freq = phase.freqs[cast(ulong)floor(fmod(phase.t, phase.freqs.length))];
+		auto freq = φ.freqs[cast(ulong)floor(fmod(φ.t*3f, φ.freqs.length))];
 
-		*pout++ = vol * sin(phase.left);
-		*pout++ = vol * sin(phase.right);
+		*pout++ = vol * λ(φ.left);
+		*pout++ = vol * λ(φ.right);
 
-		phase.left  += FRAMELENGTH*(freq - sin(phase.t)*spread + sin(phase.t*32f)*8f);
-		phase.right += FRAMELENGTH*(freq + sin(phase.t)*spread + sin(phase.t*32f)*8f);
-		phase.t += FRAMELENGTH;
+		φ.left  += FRAMELENGTH*freq*π2;
+		φ.right += FRAMELENGTH*freq*π2;
+		φ.t += FRAMELENGTH;
 	}
 	return 0;
 }
@@ -41,7 +45,7 @@ extern(C) int sawtooth(const(void)* inputBuffer, void* outputBuffer,
 void main(){
 	PaStream* stream;
 	Data data;
-	data.freqs = [80f, 110f, 220f, 440f];
+	data.freqs = [55.0, 110.0, 220.0, 440.0, 220.0, 110.0];
 
 	paCheck!Pa_Initialize();
 

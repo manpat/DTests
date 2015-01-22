@@ -1,7 +1,8 @@
 module cruft;
 
-import std.stdio;
 import derelict.util.exception;
+import deimos.portaudio;
+import std.stdio;
 import gl;
 
 private ShouldThrow handleDerelictsProblems(string symbolName) {
@@ -9,13 +10,15 @@ private ShouldThrow handleDerelictsProblems(string symbolName) {
 	return ShouldThrow.No;
 }
 
-private SDL_Window* win = null;
-private SDL_GLContext glctx = null;
-private GLuint vao = 0;
+private {
+	SDL_Window* win = null;
+	SDL_GLContext glctx = null;
+	GLuint vao = 0;
+}
 
 private enum {
 	Width = 800,
-	Height = 600
+	Height = 600,
 }
 
 void InitCruft(){
@@ -30,11 +33,11 @@ void InitCruft(){
 	}
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-	win = SDL_CreateWindow("ProcSphere", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Width, Height, 
+	win = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Width, Height, 
 		SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS*0);
 
 	scope(failure) SDL_DestroyWindow(win); 
@@ -49,9 +52,6 @@ void InitCruft(){
 
 	DerelictGL3.reload();
 
-	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, null, true);
-	glDebugMessageCallback(&GLErrorCallback, cast(const(void)*) null);
-
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	assert(CheckGLError());
@@ -59,10 +59,9 @@ void InitCruft(){
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
-	glEnable(GL_ONE_MINUS_SRC_ALPHA);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	//assert(CheckGLError());
+	assert(CheckGLError());
 
 	if(TTF_Init() < 0){
 		throw new Exception("SDL_TTF init failed");
@@ -114,14 +113,66 @@ bool CheckGLError(){
 	return false;
 }
 
-extern(C) void GLErrorCallback(uint source, uint type, uint id, uint severity, int length, const(char)* message, void* userParam) nothrow{
-	try{
-		stderr.writeln("GL ERROR");
-	}catch(Exception e){
+void WarpToCenter(){
+	SDL_WarpMouseInWindow(win, Width/2, Height/2);
+}
 
+///////////////////////////////////////////////////////////////////
+
+private {
+	PaStream* stream = null;
+
+	struct UserData(T){
+		alias Callback = void function(float*, T*, size_t);
+
+		T* ud;
+		Callback callback;
+
+		void Call(float* fd, size_t s){
+			callback(fd, ud, s);
+		}
 	}
 }
 
-void WarpToCenter(){
-	SDL_WarpMouseInWindow(win, Width/2, Height/2);
+enum SAMPLERATE = 44100;
+enum FRAMELENGTH = 1.0/SAMPLERATE;
+
+private extern(C) int audioGen(D)(const(void)*, void* outputBuffer,
+	size_t framesPerBuffer, const(PaStreamCallbackTimeInfo)*,
+	PaStreamCallbackFlags, void *userData){
+
+	auto dat = cast(UserData!D*) userData;
+	auto dataout = cast(float*) outputBuffer;
+
+	dat.Call(dataout, framesPerBuffer);
+
+	return 0;
+}
+
+void InitPA(T)(UserData!T.Callback composerFunc, T* data){
+	paCheck!Pa_Initialize();
+
+	paCheck!Pa_OpenDefaultStream(&stream,
+		0, 2, // IO
+		paFloat32,
+		SAMPLERATE,
+		paFramesPerBufferUnspecified,
+		&audioGen!T, 
+		new UserData!T(data, composerFunc));
+
+	paCheck!Pa_StartStream(stream);
+}
+
+void DeinitPA(){
+	paCheck!Pa_StopStream(stream);
+	paCheck!Pa_CloseStream(stream);
+	paCheck!Pa_Terminate();
+}
+
+void paCheck(alias func, T...)(T t){
+	PaError err = func(t);
+	if (err != paNoError){
+		stderr.writefln("error %s", to!string(Pa_GetErrorText(err)));
+		throw new Exception("PaError");
+	}
 }

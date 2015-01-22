@@ -30,7 +30,7 @@ void InitCruft(){
 	}
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
@@ -49,9 +49,6 @@ void InitCruft(){
 
 	DerelictGL3.reload();
 
-	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, null, true);
-	glDebugMessageCallback(&GLErrorCallback, cast(const(void)*) null);
-
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	assert(CheckGLError());
@@ -59,10 +56,9 @@ void InitCruft(){
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
-	glEnable(GL_ONE_MINUS_SRC_ALPHA);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	//assert(CheckGLError());
+	assert(CheckGLError());
 
 	if(TTF_Init() < 0){
 		throw new Exception("SDL_TTF init failed");
@@ -112,14 +108,6 @@ bool CheckGLError(){
 
 	stdout.flush();
 	return false;
-}
-
-extern(C) void GLErrorCallback(uint source, uint type, uint id, uint severity, int length, const(char)* message, void* userParam) nothrow{
-	try{
-		stderr.writeln("GL ERROR");
-	}catch(Exception e){
-
-	}
 }
 
 void WarpToCenter(){

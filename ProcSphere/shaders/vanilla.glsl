@@ -31,12 +31,14 @@ vec3 hsv2rgb(vec3 c){
 	return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-float level(vec4 p){
-	float d = length(p) / 100f;
+float level(vec4 p, float tsize){
+	float d = length(p);
+	d = d/tsize;
+	float l = 1.0 / (d*d*d);
 
 	return clamp(
-		100f/d, 
-		0, 500f);
+		1000f*l, 
+		0, 4000f);
 }
 
 void main(){
@@ -52,9 +54,11 @@ void main(){
 		vec4 d2 = (v0 + (v1 - v0)/2f); // Half way v1 - v0
 		vec4 dc = (v0 + (d0 - v0)/2f); // Center
 
-		float e0 = level(d0);
-		float e1 = level(d1);
-		float e2 = level(d2);
+		float tsize = (length(v0-v1) + length(v0-v2) + length(v1-v2))/3f;
+
+		float e0 = level(d0, tsize);
+		float e1 = level(d1, tsize);
+		float e2 = level(d2, tsize);
 
 		float mn = min(e0, min(e1, e2));
 		float mx = max(e0, max(e1, e2));
@@ -77,11 +81,45 @@ uniform mat4 projectionMatrix;
 in vec3[] tcpos;
 out vec3 tepos;
 
+float sinnoise(float x){
+	return abs(fract( sin(x) * 999f));
+}
+
+float sinnoise3(vec3 p){
+	return sinnoise(p.x) + sinnoise(p.y) + sinnoise(p.z);
+}
+
+float smoothnoise(vec3 p){
+	return sinnoise3(p) * smoothstep(0, 1, p) + sinnoise3(p-1) * smoothstep(0, 1, 1-p);
+}
+
+float noise(vec3 p){
+	const int it = 5;
+	float d = 0f;
+
+	for(int i = 1; i < it; i++){
+		d += smoothnoise(p / float(i));
+	}
+
+	d /= float(it);
+
+	return d;
+}
+
 void main(){
 	vec3 p0 = gl_TessCoord.x * tcpos[0];
 	vec3 p1 = gl_TessCoord.y * tcpos[1];
 	vec3 p2 = gl_TessCoord.z * tcpos[2];
 	tepos = normalize(p0+p1+p2);
+
+	float height = 0.003f;
+	vec3 npos = tepos;
+
+	tepos += noise(npos)*tepos*height;
+	tepos += noise(npos*2f)/2f*tepos*height;
+	tepos += noise(npos*3f)/3f*tepos*height;
+	tepos += noise(npos*4f)/4f*tepos*height;
+	tepos += noise(npos*8f)/8f*tepos*height;
 }
 
 #type geometry
@@ -105,7 +143,13 @@ void v(uint i, vec3 norm){
 	gpos = tepos[i];
 	gnorm = norm;
 
+	float far = 5000000;
+	float res = 0.01;
+
 	gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(gpos, 1f);
+	gl_Position.z = 2.0*log(gl_Position.w*res + 1)/log(far*res + 1) - 1;
+	gl_Position.z *= gl_Position.w;
+
 	EmitVertex();
 }
 

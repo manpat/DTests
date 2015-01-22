@@ -34,8 +34,8 @@ void InitCruft(){
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-	win = SDL_CreateWindow("ProcSphere", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Width, Height, 
-		SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_BORDERLESS*0);
+	win = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, Width, Height, 
+		SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
 
 	scope(failure) SDL_DestroyWindow(win); 
 	if(!win){
@@ -49,20 +49,13 @@ void InitCruft(){
 
 	DerelictGL3.reload();
 
-	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, null, true);
-	glDebugMessageCallback(&GLErrorCallback, cast(const(void)*) null);
+	cgl!glGenVertexArrays(1, &vao);
+	cgl!glBindVertexArray(vao);
 
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	assert(CheckGLError());
-
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glEnable(GL_ONE_MINUS_SRC_ALPHA);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	//assert(CheckGLError());
+	cgl!glEnable(GL_CULL_FACE);
+	cgl!glEnable(GL_DEPTH_TEST);
+	cgl!glEnable(GL_BLEND);
+	cgl!glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	if(TTF_Init() < 0){
 		throw new Exception("SDL_TTF init failed");
@@ -80,46 +73,6 @@ void DeinitCruft(){
 
 void Swap(){
 	SDL_GL_SwapWindow(win);
-}
-
-bool CheckGLError(){
-	GLuint error = glGetError();
-	switch(error){
-		case GL_INVALID_ENUM:
-			writeln("InvalidEnum");
-			break;
-
-		case GL_INVALID_VALUE:
-			writeln("InvalidValue");
-			break;
-
-		case GL_INVALID_OPERATION:
-			writeln("InvalidOperation");
-			break;
-
-		case GL_INVALID_FRAMEBUFFER_OPERATION:
-			writeln("InvalidFramebufferOperation");
-			break;
-
-		case GL_OUT_OF_MEMORY:
-			writeln("OutOfMemory");
-			break;
-
-		case GL_NO_ERROR:
-		default:
-			return true;
-	}
-
-	stdout.flush();
-	return false;
-}
-
-extern(C) void GLErrorCallback(uint source, uint type, uint id, uint severity, int length, const(char)* message, void* userParam) nothrow{
-	try{
-		stderr.writeln("GL ERROR");
-	}catch(Exception e){
-
-	}
 }
 
 void WarpToCenter(){
