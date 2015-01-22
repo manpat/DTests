@@ -89,7 +89,12 @@ void main(){
 			glBindTexture(GL_TEXTURE_2D_ARRAY, texArray);
 			shader.SetUniform("texArray", 2);
 
-			glDrawArrays(GL_TRIANGLES, 0, quad.verts.length);
+			MatrixStack.Push();
+
+				MatrixStack.top = MatrixStack.top * mat4.translation(sin(t), sin(t*2f)*0.4f, 0);
+				glDrawArrays(GL_TRIANGLES, 0, quad.verts.length);
+
+			MatrixStack.Pop();
 
 			quad.verts.Unbind();
 			quad.uvs.Unbind();
@@ -129,22 +134,22 @@ GLuint SetUpTextureArray(){
 
 	auto data = [
 		// 0
-		vec4(1, 0, 1, 1),
-		vec4(1, 1, 0, 1),
-		vec4(1, 0, 1, 1),
-		vec4(1, 1, 0, 1),
+		vec3(1, 0, 1),
+		vec3(1, 1, 0),
+		vec3(1, 0, 1),
+		vec3(1, 1, 0),
 
 		// 1
-		vec4(0, 1, 1, 1),
-		vec4(0, 1, 1, 1),
-		vec4(0, 1, 0, 1),
-		vec4(0, 1, 0, 1),
+		vec3(0, 1, 1),
+		vec3(0, 1, 1),
+		vec3(0, 1, 0),
+		vec3(0, 1, 0),
 
 		// 2
-		vec4(0, 0, 1, 1),
-		vec4(0, 0, 0, 1),
-		vec4(0, 0, 0, 1),
-		vec4(0, 0, 1, 1),
+		vec3(0, 0, 1),
+		vec3(0, 0, 0),
+		vec3(0, 0, 0),
+		vec3(0, 0, 1),
 	];
 
 	GLuint tex = 0;
@@ -152,7 +157,8 @@ GLuint SetUpTextureArray(){
 	cgl!glGenTextures(1, &tex);
 	cgl!glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
 	cgl!glTexStorage3D(GL_TEXTURE_2D_ARRAY, mipcount, GL_RGBA32F, width, height, numtextures);
-	cgl!glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, width, height, numtextures, GL_RGBA, GL_FLOAT, data.ptr);
+	cgl!glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, width, height, numtextures, GL_RGB, GL_FLOAT, data.ptr);
+
 	cgl!glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	cgl!glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	cgl!glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -165,10 +171,10 @@ GLuint SetUpIndexTexture(){
 	GLuint tex = 0;
 
 	ubyte[] data = [
-		0, 0, 0, 0,
-		1, 1, 2, 2,
-		1, 1, 0, 0,
-		1, 0, 2, 0,
+		0, 2, 2, 2,
+		0, 0, 1, 2,
+		0, 1, 1, 1,
+		2, 2, 2, 2,
 	];
 
 	cgl!glGenTextures(1, &tex);
@@ -187,7 +193,7 @@ GLuint SetUpIndexTexture(){
 
 struct Quad {
 	VertexArray!vec3 verts;	
-	VertexArray!vec2 uvs;	
+	VertexArray!vec2 uvs;
 }
 
 Quad SetUpQuad(){

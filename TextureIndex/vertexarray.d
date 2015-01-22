@@ -92,7 +92,7 @@ class VertexArray(DataType = vec3){
 		Bind();
 
 		glVertexAttribPointer(attr.loc, NumElems, Width, GL_FALSE, DataType.sizeof, 
-			cast(void*)mixin("DataType." ~ VName ~ ".offsetof"));
+			cast(void*) mixin("DataType." ~ VName ~ ".offsetof"));
 	}
 
 	void Unbind(){

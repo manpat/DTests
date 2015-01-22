@@ -21,6 +21,7 @@ private enum {
 void InitCruft(){
 	DerelictSDL2.missingSymbolCallback = &handleDerelictsProblems;
 	DerelictSDL2ttf.load();
+	DerelictSDL2Image.load();
 	DerelictSDL2.load();
 	DerelictGL3.load();
 

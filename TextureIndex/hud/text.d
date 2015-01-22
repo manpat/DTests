@@ -108,6 +108,7 @@ private void RenderText(){
 	glDrawArrays(GL_TRIANGLES, 0, quadVertices.length);
 
 	quadVertices.Unbind();
+	quadUVs.Unbind();
 
 	posAttr.Disable();
 	uvAttr.Disable();
