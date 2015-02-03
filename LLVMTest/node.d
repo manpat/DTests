@@ -60,6 +60,39 @@ class FunctionNode : Node {
 	}
 }
 
+class ExternNode : Node {
+	this(string _name, string _retType, string[] _argTypes, bool _vararg = false){
+		name = _name;
+		retType = _retType;
+		argTypes = _argTypes;
+		vararg = _vararg;
+	}
+
+	Value GenerateCode(Context c){
+		auto retT = typeTable[retType];
+		auto argT = new Type[argTypes.length];
+
+		foreach(i; 0..argTypes.length){
+			argT[i] = typeTable[argTypes[i]];
+		}
+
+		auto ftype = LLVMFunctionType(retT, argT.ptr, cast(uint) argT.length, vararg?1:0);
+		auto func = LLVMAddFunction(c.mod, name.toStringz, ftype);
+		LLVMSetLinkage(func, LLVMLinkage.External);
+
+		symbolTable[name] = func;
+
+		return func;
+	}
+
+	private {
+		string name;
+		string retType;
+		string[] argTypes;
+		bool vararg;
+	}
+}
+
 class CallNode : Node {
 	this(string _fn, Node[] _args){
 		fn = _fn;
@@ -139,5 +172,55 @@ class CastNode : Node {
 	private {
 		Node toCast;
 		string toWhat;
+	}
+}
+
+class FloatAddNode : Node{
+	this(Node _lhs, Node _rhs){
+		lhs = _lhs;
+		rhs = _rhs;
+	}
+
+	Value GenerateCode(Context c){
+		auto l = lhs.GenerateCode(c);
+		auto r = rhs.GenerateCode(c);
+
+		return LLVMBuildFAdd(c.builder, l, r, "faddtmp".toStringz);
+	}
+
+	private {
+		Node lhs, rhs;
+	}
+}
+
+class GetFunctionParamNode : Node {
+	this(uint _paramNo){
+		paramNo = _paramNo;
+	}
+
+	Value GenerateCode(Context c){
+	    Value func = LLVMGetBasicBlockParent(LLVMGetInsertBlock(c.builder));
+
+	    return LLVMGetParam(func, paramNo);
+	}
+
+	private uint paramNo;
+}
+
+class ComputeOnceNode : Node {
+	this(Node _n){
+		n = _n;
+	}
+
+	Value GenerateCode(Context c){
+		if(!v){
+			v = n.GenerateCode(c);
+		}
+		return v;
+	}
+
+	private {
+		Node n;
+		Value v;
 	}
 }

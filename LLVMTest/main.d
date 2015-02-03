@@ -43,32 +43,26 @@ void main(){
 	typeTable["i8*"] = LLVMPointerType(LLVMInt8Type(), 0);
 	typeTable["void"] = LLVMVoidType();
 
-	auto floatType = typeTable["float"];
-	auto doubleType = typeTable["double"];
-	auto i32Type = typeTable["i32"];
-	auto i8pType = typeTable["i8*"];
-	auto voidType = typeTable["void"];
+	auto printNode = new ExternNode("printf", "i32", ["i8*"], true);
+	printNode.GenerateCode(context);
 
-	auto llprintf = LLVMAddFunction(context.mod, "printf", LLVMFunctionType(i32Type, [i8pType].ptr, 1, 1));
-	LLVMSetLinkage(llprintf, LLVMLinkage.External);
-	symbolTable["printf"] = llprintf;
+	auto funcNode = new FunctionNode("func", "float", ["float"], false);
 
-	auto func = LLVMAddFunction(context.mod, "func", LLVMFunctionType(floatType, [floatType].ptr, 1, 0));
-	LLVMSetFunctionCallConv(func, LLVMCallConv.C);
-	auto bb = LLVMAppendBasicBlock(func, "entry");
-	symbolTable["func"] = func;
+	Node[] funcBody;
 
-	auto p0 = LLVMGetParam(func, 0);
-	auto c = LLVMConstReal(floatType, 10.0);
+	auto ret = new ComputeOnceNode(new FloatAddNode(
+			new GetFunctionParamNode(0), 
+			new ConstNode!float("float", 10.0)));
 
-	LLVMPositionBuilderAtEnd(context.builder, bb);
-	auto ret = LLVMBuildFAdd(context.builder, p0, c, "addtmp".toStringz);
-	LLVMBuildCall(context.builder, llprintf, 
-		[LLVMBuildGlobalStringPtr(context.builder, "\nTesting %f\n".toStringz, "thing".toStringz), 
-		LLVMBuildFPCast(context.builder, ret, doubleType, "printcast".toStringz)].ptr, 
-		2, "".toStringz);
+	funcBody ~= new CallNode("printf", cast(Node[]) [
+		new ConstNode!string("i8*", "\nTesting %f %s\n"),
+		new CastNode(ret, "double"),
+		new ConstNode!string("i8*", "lel")
+	]);
 
-	LLVMBuildRet(context.builder, ret);
+	funcBody ~= new ReturnNode(ret);
+	funcNode.SetBody(funcBody);
+	funcNode.GenerateCode(context);
 
 	auto mainNode = new FunctionNode("main", "i32", [], false);
 	mainNode.SetBody(cast(Node[]) [
@@ -82,16 +76,6 @@ void main(){
 	]);
 
 	mainNode.GenerateCode(context);
-
-	//auto mainf = LLVMAddFunction(context.mod, "main", LLVMFunctionType(i32Type, [voidType].ptr, 0, 0));
-	//auto mainbb = LLVMAppendBasicBlock(mainf, "entry");
-	//LLVMPositionBuilderAtEnd(context.builder, mainbb);
-	//auto fret = LLVMBuildCall(context.builder, func, [LLVMConstReal(floatType, 5.0)].ptr, 1u, "ret".toStringz);
-	//LLVMBuildCall(context.builder, llprintf, 
-	//	[LLVMBuildGlobalStringPtr(context.builder, "Inmain %f\n".toStringz, "thing".toStringz), 
-	//	LLVMBuildFPCast(context.builder, fret, doubleType, "printcast".toStringz)].ptr, 
-	//	2, "".toStringz);
-	//LLVMBuildRet(context.builder, LLVMConstInt(i32Type, 0, 0));
 
 	LLVMDumpModule(context.mod);
 	LLVMWriteBitcodeToFile(context.mod, "output.bc\0".dup.ptr);
