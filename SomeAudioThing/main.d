@@ -8,7 +8,7 @@ import cruft;
 import gl;
 
 struct Data {
-	Voice[8] voices;
+	Voice[16] voices;
 	uint i = 0;
 	double t = 0.0;
 

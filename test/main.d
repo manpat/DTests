@@ -3,8 +3,6 @@ module main;
 import std.stdio;
 import testing.classes;
 import testing.funcs;
-import derelict.util.exception;
-import derelict.sdl2.sdl;
 
 void set(Thing t, int x){
 	t.x = x;
@@ -14,22 +12,29 @@ int get(Thing t){
 	return t.x;
 }
 
-bool handleDerelictsProblems(string libName, string symbolName) {
-	writeln("Failed to load ", symbolName, ", ignoring this.");
-	return true;
+void times(alias func, T)(T x){
+	import std.traits : arity;
+
+	foreach(i; 0..x){
+		static if(arity!func == 1){
+			func(i);
+		}else static if(arity!func == 0){
+			func();
+		}
+	}
 }
 
 void main(){
-	writeln("Things ", fib!(0));
-	writeln("Things ", fib!(1));
-	writeln("Things ", fib!(2));
-	writeln("Things ", fib!(3));
-	writeln("Things ", fib!(4));
-	writeln("Things ", fib!(5));
-	writeln("Things ", fib!(6));
-	writeln("Things ", fib!(7));
-	writeln("Things ", fib!(8));
-	writeln("Things ", fib!(9));
+	writeln("Things ", fib!0);
+	writeln("Things ", fib!1);
+	writeln("Things ", fib!2);
+	writeln("Things ", fib!3);
+	writeln("Things ", fib!4);
+	writeln("Things ", fib!5);
+	writeln("Things ", fib!6);
+	writeln("Things ", fib!7);
+	writeln("Things ", fib!8);
+	writeln("Things ", fib!9);
 	writeln();
 
 	scope (exit) writeln("Scope Exit");
@@ -70,41 +75,7 @@ void main(){
 
 	writeln("asmTest: ", asmTest(3));
 
-	try{
-		Derelict_SetMissingSymbolCallback(&handleDerelictsProblems);
-		DerelictSDL2.load();
-
-		if(SDL_Init(SDL_INIT_EVERYTHING) < 0){
-			writeln("SDL Init failed");
-			throw(new Exception("Shit"));
-		}
-
-		SDL_Window* win = SDL_CreateWindow("Shit", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
-		if(!win){
-			writeln("Window create failed");
-
-			SDL_Quit();
-		}
-
-		bool running = true;
-		while(running){
-			SDL_Event e;
-			while(SDL_PollEvent(&e)){
-				switch(e.type){
-					case SDL_KEYDOWN:
-						running = false;
-						break;
-					default:
-						break;
-				}
-			}
-
-			SDL_GL_SwapWindow(win);
-		}
-
-		SDL_DestroyWindow(win);
-		SDL_Quit();
-	}catch(Exception e){
-		writeln("Fuck: ", e.msg);
-	}
+	7.times!( { writeln("lel"); } );
+	7.times!( (int x){writeln(x);} );
+	7.times!( (int x) => writeln(x) );
 }

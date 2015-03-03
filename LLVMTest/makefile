@@ -15,8 +15,8 @@ $(OUTPUTNAME).build: *.d #*/*.d
 
 run:
 	./$(OUTPUTNAME).build
+	llc output.bc
 	lli output.bc
-	# llc output.bc
 	rm output.bc
 	# gcc output.s -o output
 	# ./output

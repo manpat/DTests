@@ -17,7 +17,8 @@ func:                                   # @func
 	addss	.LCPI0_0(%rip), %xmm0
 	movss	%xmm0, 4(%rsp)          # 4-byte Spill
 	cvtss2sd	%xmm0, %xmm0
-	movl	$thing, %edi
+	movl	$__unnamed_1, %edi
+	movl	$__unnamed_2, %esi
 	movb	$1, %al
 	callq	printf
 	movss	4(%rsp), %xmm0          # 4-byte Reload
@@ -47,7 +48,7 @@ main:                                   # @main
 	movss	.LCPI1_0(%rip), %xmm0
 	callq	func
 	cvtss2sd	%xmm0, %xmm0
-	movl	$__unnamed_1, %edi
+	movl	$__unnamed_3, %edi
 	movb	$1, %al
 	callq	printf
 	xorl	%eax, %eax
@@ -59,16 +60,21 @@ main:                                   # @main
 	.cfi_endproc
 .Leh_func_end1:
 
-	.type	thing,@object           # @thing
-	.section	.rodata.str1.1,"aMS",@progbits,1
-thing:
-	.asciz	 "\nTesting %f\n"
-	.size	thing, 13
-
 	.type	__unnamed_1,@object     # @0
+	.section	.rodata.str1.1,"aMS",@progbits,1
 __unnamed_1:
+	.asciz	 "\nTesting %f %s\n"
+	.size	__unnamed_1, 16
+
+	.type	__unnamed_2,@object     # @1
+__unnamed_2:
+	.asciz	 "lel"
+	.size	__unnamed_2, 4
+
+	.type	__unnamed_3,@object     # @2
+__unnamed_3:
 	.asciz	 "Hello %f\n"
-	.size	__unnamed_1, 10
+	.size	__unnamed_3, 10
 
 
 	.section	".note.GNU-stack","",@progbits

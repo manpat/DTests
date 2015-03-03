@@ -50,14 +50,15 @@ void main(){
 
 	Node[] funcBody;
 
+	// ComputeOnce should never really be needed
 	auto ret = new ComputeOnceNode(new FloatAddNode(
 			new GetFunctionParamNode(0), 
-			new ConstNode!float("float", 10.0)));
+			new ConstNode!"float"("10.0")));
 
 	funcBody ~= new CallNode("printf", cast(Node[]) [
-		new ConstNode!string("i8*", "\nTesting %f %s\n"),
+		new ConstNode!"i8*"("\nTesting %f %s\n"),
 		new CastNode(ret, "double"),
-		new ConstNode!string("i8*", "lel")
+		new ConstNode!"i8*"("lel")
 	]);
 
 	funcBody ~= new ReturnNode(ret);
@@ -67,12 +68,14 @@ void main(){
 	auto mainNode = new FunctionNode("main", "i32", [], false);
 	mainNode.SetBody(cast(Node[]) [
 		new CallNode("printf", cast(Node[]) [
-			new ConstNode!string("i8*", "Hello %f\n"),
+			new ConstNode!"i8*"("Hello %f\n"),
 			new CastNode(
-				new CallNode("func", cast(Node[]) [new ConstNode!float("float", 5f)])
+				new CallNode("func", cast(Node[]) [new ConstNode!"float"("5.0")])
 				, "double")
 			]),
-		new ReturnNode(new ConstNode!int("i32", 0)),
+
+		
+		new ReturnNode(new ConstNode!"i32"("0")),
 	]);
 
 	mainNode.GenerateCode(context);
@@ -82,4 +85,5 @@ void main(){
 
 	//auto res = LLVMRunFunction(engine, func, 1, [LLVMCreateGenericValueOfFloat(floatType, 5.0)].ptr);
 	//writeln(LLVMGenericValueToFloat(floatType, res));
+	writeln("Compilation done\n");
 }

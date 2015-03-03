@@ -134,28 +134,26 @@ class ReturnNode : Node {
 	}
 }
 
-class ConstNode(T) : Node {
-	this(string tname, T _value){
-		value = _value;
-		typeName = tname;
+class ConstNode(string typeName) : Node {
+	this(string _value){
+		text = _value;
+		//typeName = tname;
 	}
 
 	Value GenerateCode(Context c){
 		auto type = typeTable[typeName];
 
-		static if(is(T == int)){
-			return LLVMConstInt(type, value, 0);
-		}else static if(is(T == float)){
-			return LLVMConstReal(type, value);
-		}else static if(is(T == string)){
-			//return LLVMConstString(cast(const(char)*) value.dup.ptr, cast(uint) value.length, false);
-			return LLVMBuildGlobalStringPtr(c.builder, value.toStringz, "".toStringz);
+		static if(typeName == "i32"){
+			return LLVMConstIntOfString(type, text.toStringz, 10);
+		}else static if(typeName == "float"){
+			return LLVMConstRealOfString(type, text.toStringz);
+		}else static if(typeName == "i8*"){
+			return LLVMBuildGlobalStringPtr(c.builder, text.toStringz, "".toStringz);
 		}
 	}
 
 	private {
-		string typeName;
-		T value;
+		string text;
 	}
 }
 
