@@ -1,0 +1,2 @@
+POD -> (network POD)
+@optional T* -> (1-byte valid, [T])
