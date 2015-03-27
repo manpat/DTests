@@ -10,13 +10,13 @@ class VertexArray(DataType = vec3){
 	private uint _length = 0;
 
 	this(GLuint _bufferType = GL_ARRAY_BUFFER, GLuint _memMode = GL_STATIC_DRAW){
-		glGenBuffers(1, &vbo);
+		cgl!glGenBuffers(1, &vbo);
 		bufferType = _bufferType;
 		memoryMode = _memMode;
 	}
 
 	~this(){
-		glDeleteBuffers(1, &vbo);
+		cgl!glDeleteBuffers(1, &vbo);
 	}
 
 	void Bind(){
@@ -114,7 +114,7 @@ class VertexArray(DataType = vec3){
 		Unbind();
 	}
 
-	uint length(){
+	@property uint length(){
 		return _length;
 	}
 

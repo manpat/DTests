@@ -61,7 +61,7 @@ private {
 	}
 }
 
-enum SAMPLERATE = 44100;
+enum SAMPLERATE = 22050;
 enum FRAMELENGTH = 1.0/SAMPLERATE;
 
 private extern(C) int audioGen(D)(const(void)*, void* outputBuffer,

@@ -49,14 +49,16 @@ void InitCruft(){
 	if(!glctx) throw new Exception("GL context creation failed");
 
 	DerelictGL3.reload();
+	
+	InitGLDebugging();
 
 	cgl!glGenVertexArrays(1, &vao);
 	cgl!glBindVertexArray(vao);
 
-	cgl!glEnable(GL_DEBUG_OUTPUT);
-	cgl!glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	//cgl!glEnable(GL_DEBUG_OUTPUT);
+	//cgl!glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
-	cgl!glDebugMessageCallback(&DebugFunc, cast(const(void)*) null);
+	//cgl!glDebugMessageCallback(&GLDebugFunc, cast(const(void)*) null);
 
 	cgl!glEnable(GL_CULL_FACE);
 	cgl!glEnable(GL_DEPTH_TEST);
@@ -79,59 +81,4 @@ void DeinitCruft(){
 
 void Swap(){
 	SDL_GL_SwapWindow(win);
-}
-
-extern(C)
-void DebugFunc(GLenum source, GLenum type, GLuint id,
-	GLenum severity, GLsizei length, const (GLchar)* message,
-	GLvoid* userParam) nothrow{
-
-	import std.string;
-
-	try {
-		writeln(GLDebugEnumsToString(source, type, severity), "\t\tid: ", id, "\n\t", message.fromStringz);
-	}catch(Exception e){
-
-	}
-}
-
-private string GLDebugEnumsToString(GLenum source, GLenum type, GLenum severity){
-	string ret = "";
-
-	switch(severity){
-		case GL_DEBUG_SEVERITY_HIGH: ret ~= "[high]"; break;
-		case GL_DEBUG_SEVERITY_MEDIUM: ret ~= "[medium]"; break;
-		case GL_DEBUG_SEVERITY_LOW: ret ~= "[low]"; break;
-		case GL_DEBUG_SEVERITY_NOTIFICATION: ret ~= "[notification]"; break;
-		default: ret ~= "[unknown]";
-	}
-
-	ret ~= "\tsrc:";
-
-	switch(source){
-		case GL_DEBUG_SOURCE_API: ret ~= " API"; break;
-		case GL_DEBUG_SOURCE_WINDOW_SYSTEM: ret ~= " WINDOW_SYSTEM"; break;
-		case GL_DEBUG_SOURCE_SHADER_COMPILER: ret ~= " SHADER_COMPILER"; break;
-		case GL_DEBUG_SOURCE_THIRD_PARTY: ret ~= " THIRD_PARTY"; break;
-		case GL_DEBUG_SOURCE_APPLICATION: ret ~= " APPLICATION"; break;
-		case GL_DEBUG_SOURCE_OTHER: ret ~= " OTHER"; break;
-		default: ret ~= " unknown";
-	}
-
-	ret ~= "\ttype:";
-
-	switch(type){
-		case GL_DEBUG_TYPE_ERROR: ret ~= " error"; break;
-		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: ret ~= " deprecated behaviour"; break;
-		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: ret ~= " undefined behaviour"; break;
-		case GL_DEBUG_TYPE_PORTABILITY: ret ~= " portability issue"; break;
-		case GL_DEBUG_TYPE_PERFORMANCE: ret ~= " performance issue"; break;
-		case GL_DEBUG_TYPE_MARKER: ret ~= " marker"; break;
-		case GL_DEBUG_TYPE_PUSH_GROUP: ret ~= " push group"; break;
-		case GL_DEBUG_TYPE_POP_GROUP: ret ~= " pop group"; break;
-		case GL_DEBUG_TYPE_OTHER: ret ~= " other"; break;
-		default: ret ~= " unknown";
-	}
-
-	return ret;
 }

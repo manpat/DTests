@@ -36,10 +36,10 @@ public:
 
 	~this(){
 		if(activeShader == this) {
-			glUseProgram(0);
+			cgl!glUseProgram(0);
 			activeShader = null;
 		}
-		glDeleteProgram(_program);
+		cgl!glDeleteProgram(_program);
 	}
 
 	void Load(){
@@ -53,25 +53,25 @@ public:
 
 		if(_program){
 			if(activeShader == this)
-				glUseProgram(0);
+				cgl!glUseProgram(0);
 
-			glDeleteProgram(_program);
+			cgl!glDeleteProgram(_program);
 		}
 
-		_program = glCreateProgram();
+		_program = cgl!glCreateProgram();
 		foreach(s; sh){
-			glAttachShader(_program, s);
+			cgl!glAttachShader(_program, s);
 		}
 
 		cgl!glBindFragDataLocation(_program, 0, "color");
-
 		cgl!glLinkProgram(_program);
+
 		foreach(s; sh){
-			glDeleteShader(s);
+			cgl!glDeleteShader(s);
 		}
 
 		if(!activeShader || activeShader == this){
-			glUseProgram(_program);
+			cgl!glUseProgram(_program);
 			activeShader = this;
 		}
 
@@ -158,8 +158,8 @@ public:
 	private GLuint LoadShaderFromString(char[] src, GLuint type){
 		import std.string : toStringz;
 
-		auto sh = glCreateShader(type);
-		scope(failure) glDeleteShader(sh);
+		auto sh = cgl!glCreateShader(type);
+		scope(failure) cgl!glDeleteShader(sh);
 
 		auto _zsrc = src.toStringz;
 		cgl!glShaderSource(sh, 1, &_zsrc, null);
@@ -169,7 +169,7 @@ public:
 		cgl!glGetShaderiv(sh, GL_COMPILE_STATUS, &status);
 		if(status == GL_FALSE){
 			char[] buffer = new char[512];
-			glGetShaderInfoLog(sh, 512, null, buffer.ptr);
+			cgl!glGetShaderInfoLog(sh, 512, null, buffer.ptr);
 
 			writeln(buffer);
 			throw new Exception("Shader compile fail");
@@ -218,15 +218,15 @@ public:
 			mixin("glUniform"~to!string(D)~"fv")(name, 1, dat.value_ptr);
 
 		}else static if(is(T == float)){
-			glUniform1f(name, dat);
+			cgl!glUniform1f(name, dat);
 		}else static if(is(T == double)){
-			glUniform1d(name, dat);
+			cgl!glUniform1d(name, dat);
 		}else static if(is(T == int)){
-			glUniform1i(name, dat);
+			cgl!glUniform1i(name, dat);
 		}else static if(is(T == uint)){
-			glUniform1ui(name, dat);
+			cgl!glUniform1ui(name, dat);
 		}else static if(is(T == bool)){
-			glUniform1ui(name, dat);
+			cgl!glUniform1ui(name, dat);
 		}else{
 			assert(false, "SetUniform not supported for type " ~ T.stringof);
 		}
@@ -243,13 +243,13 @@ class Attribute {
 	}
 
 	void Enable(){
-		glEnableVertexAttribArray(loc);
+		cgl!glEnableVertexAttribArray(loc);
 	}
 	void Disable(){
-		glDisableVertexAttribArray(loc);
+		cgl!glDisableVertexAttribArray(loc);
 	}
 
 	void SetDivisor(int i){
-		glVertexAttribDivisor(loc, i);
+		cgl!glVertexAttribDivisor(loc, i);
 	}
 }

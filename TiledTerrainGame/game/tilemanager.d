@@ -31,6 +31,7 @@ class TileManager {
 	uint width, height;
 
 	VertexArray!vec3 tileQuad;
+	VertexArray!vec3 tileNorms;
 	VertexArray!Tile instData;
 	VertexArray!ubvec3 idArray;
 
@@ -47,12 +48,12 @@ class TileManager {
 
 				map[c].position = vec3(
 					x*(2f + tilesep) - width + 1f - tilesep*width/2f, 
-					0, 
+					0f, 
 					y*(2f + tilesep) - height + 1f - tilesep*height/2f);
 
 				float a = ((x+y+1)%2)*0.3;
 				//map[c].color = vec3((x+y)%2 + a, x%2 + a, y%2 + a).normalized * 1.2f;
-				map[c].color = vec3(0.3f);
+				map[c].color = vec3(0.5f);
 				map[c].id = 1 + c;
 			}
 
@@ -67,8 +68,11 @@ class TileManager {
 		} 
 		idArray.Load(ids);
 
+		enum S = 100f;
+
 		tileQuad = new VertexArray!vec3();
 		tileQuad.Load([
+			// Top
 			vec3(-1, 0,-1),
 			vec3( 1, 0, 1),
 			vec3(-1, 0, 1),
@@ -76,6 +80,48 @@ class TileManager {
 			vec3(-1, 0,-1),
 			vec3( 1, 0,-1),
 			vec3( 1, 0, 1),
+
+			// Skirt Left
+			vec3( 1, 0,-1),
+			vec3(-1, 0,-1),
+			vec3(-1,-S,-1),
+			
+			vec3( 1, 0,-1),
+			vec3(-1,-S,-1),
+			vec3( 1,-S,-1),
+
+			// Skirt Right
+			vec3( 1, 0,-1),
+			vec3( 1,-S, 1),
+			vec3( 1, 0, 1),
+			
+			vec3( 1, 0,-1),
+			vec3( 1,-S,-1),
+			vec3( 1,-S, 1),
+		]);
+
+		tileNorms = new VertexArray!vec3();
+		tileNorms.Load([
+			vec3(0, 1, 0),
+			vec3(0, 1, 0),
+			vec3(0, 1, 0),
+			vec3(0, 1, 0),
+			vec3(0, 1, 0),
+			vec3(0, 1, 0),
+
+			vec3(0, 0,-1),
+			vec3(0, 0,-1),
+			vec3(0, 0,-1),
+			vec3(0, 0,-1),
+			vec3(0, 0,-1),
+			vec3(0, 0,-1),
+
+			vec3(1, 0, 0),
+			vec3(1, 0, 0),
+			vec3(1, 0, 0),
+			vec3(1, 0, 0),
+			vec3(1, 0, 0),
+			vec3(1, 0, 0),
 		]);
 	}
 
@@ -95,6 +141,7 @@ class TileManager {
 	void Render(){
 		auto sh = GetActiveShader();
 		auto posAttr = sh.GetAttribute("position");
+		auto normAttr = sh.GetAttribute("normal");
 		auto colAttr = sh.GetAttribute("color");
 		auto offAttr = sh.GetAttribute("offset");
 		auto flagsAttr = sh.GetAttribute("flags");
@@ -102,6 +149,7 @@ class TileManager {
 		instData.Load(map); // Update tile data
 
 		tileQuad.Bind(posAttr);
+		tileNorms.Bind(normAttr);
 		instData.Bind!(vec3, "position")(offAttr);
 		instData.Bind!(vec3, "color")(colAttr);
 		instData.Bind!(uint, "flags")(flagsAttr);
@@ -118,6 +166,7 @@ class TileManager {
 		flagsAttr.SetDivisor(0);
 		instData.Unbind();
 		tileQuad.Unbind();
+		tileNorms.Unbind();
 	}
 
 	Tile* PickTile(uint x, uint y){
