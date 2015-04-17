@@ -2,7 +2,7 @@ DENJ=`pwd`/../denj
 SRC=$(DENJ)/*/*.d
 
 build: *.d
-	dmd $^ -ofbuild -I$(DENJ) $(SRC)
+	dmd $^ -ofStencil.build -I$(DENJ) $(SRC)
 
-run: build
-	@./build
+run: Stencil.build
+	@./Stencil.build

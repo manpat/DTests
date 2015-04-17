@@ -1,6 +1,6 @@
 
 build: *.d
-	dmd $^ -ofbuild
+	dmd $^ -ofSOA.build
 
-run: build
-	./build
+run: SOA.build
+	./SOA.build
